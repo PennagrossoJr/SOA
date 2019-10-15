@@ -82,10 +82,11 @@ int sys_write(int fd, char *buffer, int size) {
 
 }
 
-void sys_task_switch(struct task_struct *new) {
+void sys_task_switch(struct task_union *new) {
     
-    set_cr3(new->*dir_pages_baseAddr);
-    tss.esp0 = & 
+    set_cr3(new->task->*dir_pages_baseAddr);
+    tss.esp0 = & (*new).stack;
+    // luego se vuelve al wrapper para cambiar el kernel ebp al del new proceso
 }
 
 
