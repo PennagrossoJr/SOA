@@ -16,13 +16,17 @@ enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
 
 struct task_struct {
   int PID;			/* Process ID. This MUST be the first field of the struct. */
-  page_table_entry * dir_pages_baseAddr;
+  page_table_entry *dir_pages_baseAddr;
+  struct list_head anchor; //new field added!!!
 };
 
 union task_union {
   struct task_struct task;
   unsigned long stack[KERNEL_STACK_SIZE];    /* pila de sistema, per procés */
 };
+
+struct list_head free_queue; //la free free_queue!!!
+struct list_head ready_queue; //la ready_queue!!!
 
 extern union task_union task[NR_TASKS]; /* Vector de tasques */
 

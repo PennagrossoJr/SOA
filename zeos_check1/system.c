@@ -86,6 +86,9 @@ int __attribute__((__section__(".text.main")))
 /* Initialize an address space to be used for the monoprocess version of ZeOS */
 
   monoprocess_init_addr_space(); /* TO BE DELETED WHEN ADDED THE PROCESS MANAGEMENT CODE TO BECOME MULTIPROCESS */
+  
+  INIT_LIST_HEAD(&free_queue); //inicializar la struct!!!
+  INIT_LIST_HEAD(&ready_queue); //inicializar la struct!!!
 
   /* Initialize Scheduling */
   init_sched();

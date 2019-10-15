@@ -20,7 +20,7 @@ ENTRY(write)
 
   # Generate the trap: int $0x80
 
-  int $0x80
+  int $0x80 #sysenter
 
   # error si es numero negativo!
 
@@ -62,3 +62,29 @@ error_gettime:
 
   popl %ebp
   ret
+
+  
+ENTRY(task_switch)
+
+  pushl %ebp
+  movl %esp,%eb
+  
+  movl 0(%ebp),%ebx
+  movl 12(%ebp),%esi
+  movl 16(%ebp),%edi
+  
+  pushl %ebx
+  pushl %esi
+  pushl %edi
+  
+  init $0x80
+  
+  
+  
+  
+  
+  
+  
+  
+
+  

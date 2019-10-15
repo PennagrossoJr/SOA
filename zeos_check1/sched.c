@@ -52,18 +52,30 @@ void cpu_idle(void)
 }
 
 void init_idle (void)
-{
-    task_struct new;
+{    
+    /*task_struct new;
     new.PID = 0;
     new.dir_pages_baseAddr = allocate_DIR(&new);
     
     task_union new_union;
-    new_union.task = new;
+    new_union.task = new;*/
+    
+    struct list_head *e = list_first(&free_queue); //primer elemento de la queue!!!
+    struct task_union *idle;
+    idle = *list_head_to_task_struct(*free_queue);
+    idle->task->PID = 0;
+    idle->task->*dir_pages_baseAddr = *allocate_DIR(idle->*task);
+
+    
+
 }
 
 void init_task1(void)
 {
-	
+    
+    struct task_union el; //o task struct
+    list_add(&(el.anchor),&free_queue); //añadimos el proceso a la free_queue
+    
 }
 
 
