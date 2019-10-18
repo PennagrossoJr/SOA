@@ -53,20 +53,17 @@ void cpu_idle(void)
 
 void init_idle (void)
 {    
-    /*task_struct new;
-    new.PID = 0;
-    new.dir_pages_baseAddr = allocate_DIR(&new);
-    
-    task_union new_union;
-    new_union.task = new;*/
-    
-    struct list_head *e = list_first(&free_queue); //primer elemento de la queue!!!
-    struct task_union *idle;
-    idle = *list_head_to_task_struct(*free_queue);
-    idle->task->PID = 0;
-    idle->task->*dir_pages_baseAddr = *allocate_DIR(idle->*task);
 
     
+    struct list_head *e = list_first(&free_queue); //primer elemento de la queue!!!
+    list_del(e); //eliminamos de free_queue
+    struct task_union *idle;
+    idle = list_entry(e, struct task_struct, list); //struct of the idle
+    
+    idle->PID = 0;
+    allocate_DIR(idle_task); //inicializo con nuevo directory
+
+    //  COMO CONSTRUYO EL TASK_UNION???FTW
 
 }
 
@@ -82,6 +79,15 @@ void init_task1(void)
 void init_sched()
 {
 
+}
+
+void init_queues() 
+{
+  INIT_LIST_HEAD(&free_queue); //inicializar la struct!!!
+  for(int i =0; i < NR_TASKS ; i++ ) {
+      list_add_tail( &task[i].task.anchor, &free_queue)
+  }
+  INIT_LIST_HEAD(&ready_queue); //inicializar la struct!!!
 }
 
 struct task_struct* current()

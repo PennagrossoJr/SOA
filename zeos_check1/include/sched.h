@@ -37,7 +37,7 @@ extern union task_union task[NR_TASKS]; /* Vector de tasques */
 
 /* Inicialitza les dades del proces inicial */
 void init_task1(void);
-
+void init_queues(void);
 void init_idle(void);
 
 void init_sched(void);
