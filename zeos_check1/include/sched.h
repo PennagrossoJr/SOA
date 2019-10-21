@@ -27,6 +27,7 @@ union task_union {
 
 struct list_head free_queue; //la free free_queue!!!
 struct list_head ready_queue; //la ready_queue!!!
+struct task_struct *idle_task;
 
 extern union task_union task[NR_TASKS]; /* Vector de tasques */
 

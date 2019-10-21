@@ -63,28 +63,29 @@ error_gettime:
   popl %ebp
   ret
 
-  
+
 ENTRY(task_switch)
 
   pushl %ebp
   movl %esp,%eb
+
+  #no hace falta????
   
   movl 0(%ebp),%ebx
   movl 12(%ebp),%esi
   movl 16(%ebp),%edi
-  
-  pushl %ebx
+
+  # save ESI, EDI and EBX
+
   pushl %esi
   pushl %edi
-  
-  init $0x80
-  
-  
-  
-  
-  
-  
-  
-  
+  pushl %ebx
 
-  
+  call inner_task_switch
+
+  popl %ebx
+  popl %edi
+  popl %esi
+  popl %ebp
+
+  ret

@@ -20,13 +20,13 @@ extern struct list_head blocked;
 
 
 /* get_DIR - Returns the Page Directory address for task 't' */
-page_table_entry * get_DIR (struct task_struct *t) 
+page_table_entry * get_DIR (struct task_struct *t)
 {
 	return t->dir_pages_baseAddr;
 }
 
 /* get_PT - Returns the Page Table address for task 't' */
-page_table_entry * get_PT (struct task_struct *t) 
+page_table_entry * get_PT (struct task_struct *t)
 {
 	return (page_table_entry *)(((unsigned int)(t->dir_pages_baseAddr->bits.pbase_addr))<<12);
 }
@@ -52,27 +52,39 @@ void cpu_idle(void)
 }
 
 void init_idle (void)
-{    
+{
 
-    
+
     struct list_head *e = list_first(&free_queue); //primer elemento de la queue!!!
-    list_del(e); //eliminamos de free_queue
-    struct task_union *idle;
-    idle = list_entry(e, struct task_struct, list); //struct of the idle
-    
-    idle->PID = 0;
+    list_del(list_first(&freequeue));
+    //list_del(e); //eliminamos de free_queue
+    idle_task = list_head_to_task_struct(e); //struct of the idle
+    union task_union *idle_task_union = (union task_union*)idle_task; //COMO CONSTRUYO EL TASK_UNION??
+
+    idle_task->PID = 0;
     allocate_DIR(idle_task); //inicializo con nuevo directory
 
-    //  COMO CONSTRUYO EL TASK_UNION???FTW
+    idle_task_union->stack[KERNEL_STACK_SIZE] = &cpu_idle; //stack vacia??
+
+    //Initialize the global variable idle_task, which will help to get easily the task_struct of the idle process.
 
 }
 
 void init_task1(void)
 {
+
+    struct list_head *e = list_first(&free_queue);
+    struct task_struct *e1 = list_head_to_task_struct(e);
+    union task_union *union = (union task_union*)e1; //o task struct
+    list_del(list_first(&freequeue));
+
+    e1->PID = 1;
+    allocate_DIR(e1);
+    set_user_pages(e1);
     
-    struct task_union el; //o task struct
+
     list_add(&(el.anchor),&free_queue); //añadimos el proceso a la free_queue
-    
+
 }
 
 
@@ -81,7 +93,7 @@ void init_sched()
 
 }
 
-void init_queues() 
+void init_queues()
 {
   INIT_LIST_HEAD(&free_queue); //inicializar la struct!!!
   for(int i =0; i < NR_TASKS ; i++ ) {
@@ -93,11 +105,10 @@ void init_queues()
 struct task_struct* current()
 {
   int ret_value;
-  
+
   __asm__ __volatile__(
   	"movl %%esp, %0"
 	: "=g" (ret_value)
   );
   return (struct task_struct*)(ret_value&0xfffff000);
 }
-
