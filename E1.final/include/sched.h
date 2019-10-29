@@ -19,12 +19,14 @@ struct task_struct {
   page_table_entry *dir_pages_baseAddr;
   struct list_head anchor; //new field added!!!
   page_table_entry * PT;
+  int kernel_esp; //para el cambio de stack!!!!!!
 };
 
 union task_union {
   struct task_struct task;
   unsigned long stack[KERNEL_STACK_SIZE];    /* pila de sistema, per procés */
 };
+
 
 struct list_head free_queue; //la free free_queue!!!
 struct list_head ready_queue; //la ready_queue!!!

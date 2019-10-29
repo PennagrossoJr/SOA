@@ -82,13 +82,25 @@ void init_task1(void)
     allocate_DIR(e1);
     set_user_pages(e1);
     e1->PT = get_PT(e1);
-    setTSS().tss.esp0 = union_task1 -> stack[KERNEL_STACK_SIZE]; 
+    /*setTSS().*/tss.esp0 = union_task1 -> stack[KERNEL_STACK_SIZE]; 
    
     set_cr3(e1->dir_pages_baseAddr); 
 
 
     list_add(&(el.anchor),&free_queue); //añadimos el proceso a la free_queue
 
+}
+
+void inner_task_switch(union task_union*t) {
+
+    tss.esp0 = (int)&(new->stack[KERNEL_STACK_SIZE]); //1024
+    
+    //cambio cr3
+    set_cr3(get_DIR(&new->task))//set_cr3(new->task->*dir_pages_baseAddr);
+    
+    
+    // luego se vuelve al wrapper para cambiar el kernel ebp al del new proceso
+    inner_task_switch2(&(current()->kernel_esp), new->task.kernel_esp); //cambio de las stacks!!!
 }
 
 
