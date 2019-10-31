@@ -56,12 +56,14 @@ void init_idle (void)
 
 
     struct list_head *e = list_first(&free_queue); //primer elemento de la queue!!!
-    list_del(list_first(&freequeue));
+    list_del(list_first(&free_queue));
     //list_del(e); //eliminamos de free_queue
     idle_task = list_head_to_task_struct(e); //struct of the idle
     union task_union *idle_task_union = (union task_union*)idle_task; //COMO CONSTRUYO EL TASK_UNION??
 
     idle_task->PID = 0;
+    idle_task->quantum = defaultQuantum;
+
     allocate_DIR(idle_task); //inicializo con nuevo directory
 
     idle_task_union->stack[KERNEL_STACK_SIZE] = &cpu_idle; //stack vacia??
@@ -76,29 +78,31 @@ void init_task1(void)
     struct list_head *e = list_first(&free_queue);
     struct task_struct *e1 = list_head_to_task_struct(e);
     union task_union *union_task1 = (union task_union*)e1; //o task struct
-    list_del(list_first(&freequeue));
+    list_del(list_first(&free_queue));
 
     e1->PID = 1;
     allocate_DIR(e1);
     set_user_pages(e1);
     e1->PT = get_PT(e1);
-    /*setTSS().*/tss.esp0 = union_task1 -> stack[KERNEL_STACK_SIZE]; 
-   
-    set_cr3(e1->dir_pages_baseAddr); 
+    e1->quantum = defaultQuantum;
+
+    /*setTSS().*/tss.esp0 = union_task1 -> stack[KERNEL_STACK_SIZE];
+
+    set_cr3(e1->dir_pages_baseAddr);
 
 
-    list_add(&(el.anchor),&free_queue); //añadimos el proceso a la free_queue
+    list_add_tail(&(e1->anchor),&free_queue); //añadimos el proceso a la free_queue // implementing queues
 
 }
 
 void inner_task_switch(union task_union*t) {
 
     tss.esp0 = (int)&(new->stack[KERNEL_STACK_SIZE]); //1024
-    
+
     //cambio cr3
     set_cr3(get_DIR(&new->task))//set_cr3(new->task->*dir_pages_baseAddr);
-    
-    
+
+
     // luego se vuelve al wrapper para cambiar el kernel ebp al del new proceso
     inner_task_switch2(&(current()->kernel_esp), new->task.kernel_esp); //cambio de las stacks!!!
 }
@@ -109,6 +113,43 @@ void init_sched()
 
 }
 
+void schedule() {
+   update_sched_data_rr();
+   if (needs_sched_rr() == 1) { //Function to decide if it is necessary to change the current process.
+      //returns: 1 if it is necessary to change the current process and 0 otherwise
+      update_process_state_rr(current(), &ready_queue); //struct task_struct *t, struct list_head *dst_queue);
+      sched_next_rr();
+   }
+}
+
+void update_sched_data_rr () {
+    current()->quantum = (current()->quantum) - 1;
+}
+
+int needs_sched_rr () {
+  //returns: 1 if it is necessary to change the current process and 0 otherwise
+  if (current()->quantum == 0) {
+    current()->quantum = defaultQuantum;
+    if (list_empty(&ready_queue)) return 1; //necessary Change:  A context switch is required when the quantum is over and there are some candidate process to use the CPU
+  }
+  else  return 0
+}
+
+void update_process_state_rr (struct task_struct *t, struct list_head *dst_queue) {
+
+  //If the current state of the process is running, then there is no need to delete it from any queue
+  if (t->estado != ST_RUN) {
+    list_del(&(t->anchor)); //eliminarlo de la actual queue
+    list_add_tail(&(t->anchor),dst_queue); //la añadimos en la cola dst!!!
+  }
+
+  // CAMBIO LOS ESTADOS DE LA ESTADO!!!!!
+  if (dst_queue == &ready_queue) t->estado = ST_READY;
+  else if (dst_queue == NULL) t->estado = ST_RUN;
+  else t->estado = ST_BLOCKED;
+  //else running!!! If the current state of the process is running, then there is no need to delete it from any queue.
+}
+
 void init_queues()
 {
   INIT_LIST_HEAD(&free_queue); //inicializar la struct!!!
@@ -116,6 +157,20 @@ void init_queues()
       list_add_tail( &task[i].task.anchor, &free_queue)
   }
   INIT_LIST_HEAD(&ready_queue); //inicializar la struct!!!
+}
+
+void sched_next_rr() {
+  //devolverle el quantum original no hace falta ya que lo hace antes de entrar a la funcion, en el if!!!!
+  if (!list_empty(&ready_queue)) { // to extract it from the ready queue
+    struct list_head *next = list_first(&ready_queue); //primer elemento de la queue!!!
+    list_del(list_first(&ready_queue));
+    struct task_struct *next_task = list_head_to_task_struct(&next);
+    union task_union *next_task_union = (union task_union*)next_task;
+    task_switch(next_task_union);
+
+  }
+  else task_switch(); //que hago aqui!!!!!!!!
+
 }
 
 struct task_struct* current()
