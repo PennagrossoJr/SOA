@@ -16,6 +16,8 @@
 #define LECTURA 0
 #define ESCRIPTURA 1
 
+int PIDGLOBAL = 50;
+
 int check_fd(int fd, int permissions)
 {
   if (fd!=1) return -9; /*EBADF*/
@@ -37,69 +39,84 @@ int sys_fork()
 {
   int PID=-1;
 
-  if (list_empty(&free_queue)) { //Get a free task_struct for the process. If there is no space for a new process, an  error will be returned.
-
+  
+  if (list_empty(&free_queue)) return -11; //Get a free task_struct for the process. If there is no space for a new process, an  error will be returned. EAGAIN
+      
     struct list_head *hijo = list_first(&free_queue); //primer elemento de la queue!!!
-    list_del(list_first(&free_queue));
-
-    task_struct *task_hijo = current(); //   list_head_to_task_struct(hijo); //struct of the idle
-    union task_union *hijo_task_union = (union task_union*)task_hijo; //COMO CONSTRUYO EL TASK_UNION??
-
-    //Inherit system data: copy the parent’s task_union to the child.
-    copy_from_user(&current(),&task_hijo, 4096);
-    //Initialize field dir_pages_baseAddr
-    allocate_DIR(task_hijo);
-
-    //Search physical pages in which to map logical pages for data+stack of the child process (using the alloc_frames function).
-    //Returns the frame number or -1 if there isn't any frame available.
-
-
-    if (alloc_frame_aux == -1) return -1; //-1???
+    list_del(hijo);
     
+    struct task_struct *task_hijo = list_entry(hijo,struct task_struct, anchor); //   list_head_to_task_struct(hijo); //struct of the idle
+    union task_union *hijo_task_union = (union task_union*)task_hijo; //COMO CONSTRUYO EL TASK_UNION??
+    
+    
+    //task del padre
+    struct task_struct *task_padre = current();
+    union task_union *padre_task_union = (union task_union *)task_padre;
+    //pasamos info
+    copy_data(padre_task_union, hijo_task_union,sizeof(union task_union));
+    //copy_from_user(&current(),&task_hijo, 4096);
+    
+    allocate_DIR(task_hijo);
+    
+    
+    
+    
+    //Returns the frame number or -1 if there isn't any frame available. */
+    //we need NUM_PAG_DATA==20 paginas para datos,por lo que reservamos tantas paginas
     int framesData[NUM_PAG_DATA];
     for (i = 0; i < NUM_PAG_DATA; i++){
         framesData[i] = alloc_frame();
         if (framesData[i] == -1) {//not available and whe should free space
             while(i != 0 ) {
-                free_frame(framesData[--i]);
+                    free_frame(framesData[--i]);
             
             }
             return -11; //error
                     
         }
     }
-
-    /*for(int i=0; i < NUM_PAG_DATA; ++i) {
-
-      int alloc_frame_aux = alloc_frame();
-      if (alloc_frame_aux == -1) {
-        list_add(hijo,&free_queue); //se le añade a la free queue ya que no tiene frame suficientes!!!!
-        return -11;
-      }
-      else set_ss_pag(new_PT, PAG_LOG_INIT_DATA + i, i); //void set_ss_pag(page_table_entry *PT, unsigned page,unsigned frame);
-
-    }*/
-    
-    //Create new address space
-    page_table_entry *new__PT = get_PT(task_hijo); //Returns the Page Table address
-    page_table_entry *parent_PT = get_PT(current());   //Returns the Page Table address
-
-    //Page table entries for the system code and data and for the user code can be a copy of the page table entries of the parent process
-
-    for (int i=0; i<NUM_PAG_KERNEL; ++i) {
-      set_ss_pag(new_PT, i, get_frame(parent_PT, i));
+    //hacer cosas con la TP 
+    page_table_entry *hijo_pt, *padre_pt;
+    hijo_pt = get_PT(task_hijo);
+    padre_pt = get_PT(task_padre);
+    //KERNEL - CODIGO - DATOS - PILA , KERNEL Y CODIGO SE COMPARTEN
+    for (int i = 0; i < NUM_PAG_KERNEL + NUM_PAG_CODE; i++) {
+            int frame = get_frame(padre_pt,i);
+            //asignar frame al hijo
+            set_ss_pag(hijo_pt,i,frame)
     }
-    for (int i=0; i<NUM_PAG_CODE; ++i) {
-      set_ss_pag(new_PT, PAG_LOG_INIT_CODE+i, get_frame(parent_PT, PAG_LOG_INIT_CODE+i));
+    int Data_Start = NUM_PAG_KERNEL + NUM_PAG_CODE;
+    //ahora asociamos las paginas logicas (i) con los frames que reservamos (framesData) y no son compartidas
+    for (int i=0; i < NUM_PAG_DATA; i++ ) {
+            set_ss_pag(hijo_pt, Data_Start + i, framesData[i]);
     }
+    
+    // COPIAR DATOS+PILA DEL PADRE AL HIJO
+    // ASIGNAR TEMPORALMENTE MEMORIA FISICA AL PADRE QUE SERA LUEGO PARA EL HIJO
+    int TEMP_DATA = NUM_PAG_DATA + Data_Start;
+    for (int i = 0 ; i < NUM_PAG_DATA; i++) {
+        set_ss_pag(padre_pt, i + TEMP_DATA, framesData[i]);
+        //conversion (int -> void *)
+        copy_data((void *)((Data_Start + i) * PAGE_SIZE), (void *)((TEMP_DATA + i) * PAGE_SIZE), PAGE_SIZE);
+        del_ss_pag(padre_pt, i + TEMP_DATA);
+    }
+    //Writes on CR3 register producing a TLB flush 
+    set_cr3(get_DIR(task_padre)); //disable the parent process to access the child pages.
+    //PID
+    task_hijo->PID = ++PIDGLOBAL;
+    PID = child_task->PID;
+    //PREPARE CHILD STACK
+
 
     
 
-
-  return PID;
+    
+    // meter hijo en la cola de ready
+   list_add_tail(&task_hijo->anchor, &readyqueue);	
+	
+    return PID;
 }
 
-return error; //buscar que error es!!!
 
 
 int sys_gettime() {
@@ -108,13 +125,13 @@ int sys_gettime() {
 }
 
 int sys_write(int fd, char *buffer, int size) {
-  printk("interrupcion de teclado dentro del teclado sys, escritura");
+  printk("interrupcion de teclado dentro del teclado sys, escritura");	
   //Check the fd
   int c_fd = check_fd(fd,ESCRIPTURA);
   /*if (c_fd < 0) return c_fd;
 
   //Check buffer
-  if (buffer == NULL) //hace algo!!!page_table_entry *new__PT = get_PT(task_hijo);
+  if (buffer == NULL) //hace algo!!!
   else //hace otra cosa
 
   //check the size
@@ -125,7 +142,7 @@ int sys_write(int fd, char *buffer, int size) {
   if (c_fd >= 0 && buffer != NULL && size > 0) {
     //printk("No hay fallo!!!");
     //que tenemos que escribir!!!!
-
+    
     char aux_buffer[4096];
     int size_aux = size;
     while (size_aux > 0) {
@@ -138,16 +155,28 @@ int sys_write(int fd, char *buffer, int size) {
   else if (c_fd < 0) return c_fd; //errores de los demas¿?
   else if (buffer == NULL) return -6;//valor del error --> EFAULT
   else return -22; //EINVAL
-
+      
 
 }
 
+/*void sys_task_switch(struct task_union *new) { //no se si esto se tiene que hacer aqui!!!!
+    
+    //cambio de tss
+    tss.esp0 = (int)&(new->stack[KERNEL_STACK_SIZE]); //1024
+    
+    //cambio cr3
+    set_cr3(get_DIR(&new->task))//set_cr3(new->task->*dir_pages_baseAddr);+
+    
+    
+    // luego se vuelve al wrapper para cambiar el kernel ebp al del new proceso
+    inner_task_switch();
+    
+}*/
 
 
 void sys_exit()
 {
-    
-  //Free  the  data  structures  and  resources  of  this  process  (physical  memory,  task_struct, and so). It uses the free_frame function to free physical pages
+    //Free  the  data  structures  and  resources  of  this  process  (physical  memory,  task_struct, and so). It uses the free_frame function to free physical pages
      
    page_table_entry *PT_actual = get_PT(current());
    for (int i = 0; i < NUM_PAG_DATA; ++i) {

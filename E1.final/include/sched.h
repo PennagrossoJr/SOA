@@ -15,10 +15,10 @@
 enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
 
 struct task_struct {
-  int PID;			/* Process ID. This MUST be the first field of the struct. */
+  int PID;     /* Process ID. This MUST be the first field of the struct. */
   page_table_entry *dir_pages_baseAddr;
   struct list_head anchor; //que lista esta encolada!!!!!
-  int kernel_esp; //para el cambio de stack!!!!!!
+  unsigned long kernel_esp; //para el cambio de stack!!!!!!
   int quantum;
   enum state_t estado;
   struct stats stadistical;
