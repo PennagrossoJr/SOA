@@ -44,8 +44,10 @@ int strlen(char *a)
 }
 
 void perror(void) {
-  char b[3];
-  itoa(errno,b);
-  //write("erroooooooooooooor!!!!!!!!!!!!!!!!!!!");	
-  //write(1,b,3);
+  char b[100]; 
+  itoa(errno,b); //aqui esta el mensaje errno!!!
+  
+  int largaria = strlen(b);
+  
+  write(1,b,largaria);
 }

@@ -26,9 +26,11 @@ ENTRY(write)
 
   cmpl $0, %eax
   jl error
+  
   popl %edx
   popl %ecx
   popl %ebx
+  
   popl %ebp
 
 error:
@@ -82,15 +84,42 @@ ENTRY(fork)
   pushl %ebp
   movl %esp,%ebp
    
-  # Put the identifier of the system call in the EAX register (number 20 for pid)
+  # Put the identifier of the system call in the EAX register (number 2 for pid)
   movl $0x02,%eax
   int $0x80
+  
+  cmpl $0, %eax
+  jl error_fork
+
+error_fork:
+
+  neg  %eax
+  movl %eax,errno
+  movl $-1, %eax
   
   popl %ebp
   ret
   
+ENTRY(exit):
+
+  #dinamyc link
+  pushl %ebp
+  movl %esp, %ebp
   
+  movl $0x01 #1
+  int $0x80
   
+  cmpl $0, %eax
+  jl error_exit
+
+error_exit:
+
+  neg  %eax
+  movl %eax,errno
+  movl $-1, %eax
+  
+  popl %ebp
+  ret
    
 
 

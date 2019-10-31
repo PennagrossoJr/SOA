@@ -86,9 +86,9 @@ void init_task1(void)
     e1->PT = get_PT(e1);
     e1->quantum = defaultQuantum;
 
-    /*setTSS().*/tss.esp0 = union_task1 -> stack[KERNEL_STACK_SIZE];
+    tss.esp0 = union_task1 -> stack[KERNEL_STACK_SIZE];
 
-    set_cr3(e1->dir_pages_baseAddr);
+    set_cr3(e1->dir_pages_baseAddr); // == get_DIR(&e1->task)
 
 
     list_add_tail(&(e1->anchor),&free_queue); //añadimos el proceso a la free_queue // implementing queues
@@ -144,9 +144,12 @@ void update_process_state_rr (struct task_struct *t, struct list_head *dst_queue
   }
 
   // CAMBIO LOS ESTADOS DE LA ESTADO!!!!!
-  if (dst_queue == &ready_queue) t->estado = ST_READY;
-  else if (dst_queue == NULL) t->estado = ST_RUN;
-  else t->estado = ST_BLOCKED;
+  if (dst_queue == &ready_queue)  t->estado = ST_READY;
+  else if (dst_queue == NULL) {
+      if (t->estado == ST_READY) ++((t->stadistical)->total_trans); //Total transitions ready --> run
+      t->estado = ST_RUN;
+  }
+  else t->estado = ST_BLOCKED; //we have not implemented any blocking system call 
   //else running!!! If the current state of the process is running, then there is no need to delete it from any queue.
 }
 
@@ -157,19 +160,21 @@ void init_queues()
       list_add_tail( &task[i].task.anchor, &free_queue)
   }
   INIT_LIST_HEAD(&ready_queue); //inicializar la struct!!!
+  
+  defaultQuantum = 50; //valor???
 }
 
 void sched_next_rr() {
-  //devolverle el quantum original no hace falta ya que lo hace antes de entrar a la funcion, en el if!!!!
+  
+   current()->quantum = defaultQuantum;//solamete para cuando hago el cambio en el process destruccion!!!!!
   if (!list_empty(&ready_queue)) { // to extract it from the ready queue
-    struct list_head *next = list_first(&ready_queue); //primer elemento de la queue!!!
+    struct list_head *next = list_first(&ready_queue); //primer elemento de la queue --> el sguiente!!!
     list_del(list_first(&ready_queue));
     struct task_struct *next_task = list_head_to_task_struct(&next);
     union task_union *next_task_union = (union task_union*)next_task;
-    task_switch(next_task_union);
-
+    task_switch(next_task_union); //invoke the context switch process.
   }
-  else task_switch(); //que hago aqui!!!!!!!!
+  else task_switch((union task_union*)idle_task); //sino no hay mas en la ready_queue, psasr al idle or free_queue??
 
 }
 

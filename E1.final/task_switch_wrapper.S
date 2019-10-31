@@ -17,7 +17,9 @@ ENTRY(task_switch)
   pushl %edi
   pushl %ebx
 
+  pushl 8(%ebp) //@new
   call inner_task_switch
+  
 
   popl %ebx
   popl %edi

@@ -18,10 +18,10 @@ struct task_struct {
   int PID;			/* Process ID. This MUST be the first field of the struct. */
   page_table_entry *dir_pages_baseAddr;
   struct list_head anchor; //que lista esta encolada!!!!!
-  page_table_entry * PT;
   int kernel_esp; //para el cambio de stack!!!!!!
   int quantum;
   enum state_t estado;
+  struct stats stadistical;
 };
 
 union task_union {
@@ -33,6 +33,7 @@ union task_union {
 struct list_head free_queue; //la free free_queue!!!
 struct list_head ready_queue; //la ready_queue!!!
 struct task_struct *idle_task;
+int defaultQuantum; //cuanto ponemos???
 
 extern union task_union task[NR_TASKS]; /* Vector de tasques */
 
@@ -68,5 +69,7 @@ void sched_next_rr();
 void update_process_state_rr(struct task_struct *t, struct list_head *dest);
 int needs_sched_rr();
 void update_sched_data_rr();
+
+int get_quantum (struct task_struct *t);
 
 #endif  /* __SCHED_H__ */

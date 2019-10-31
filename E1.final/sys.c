@@ -55,18 +55,31 @@ int sys_fork()
 
 
     if (alloc_frame_aux == -1) return -1; //-1???
+    
+    int framesData[NUM_PAG_DATA];
+    for (i = 0; i < NUM_PAG_DATA; i++){
+        framesData[i] = alloc_frame();
+        if (framesData[i] == -1) {//not available and whe should free space
+            while(i != 0 ) {
+                free_frame(framesData[--i]);
+            
+            }
+            return -11; //error
+                    
+        }
+    }
 
-    for(int i=0; i < NUM_PAG_DATA; ++i) {
+    /*for(int i=0; i < NUM_PAG_DATA; ++i) {
 
       int alloc_frame_aux = alloc_frame();
       if (alloc_frame_aux == -1) {
         list_add(hijo,&free_queue); //se le añade a la free queue ya que no tiene frame suficientes!!!!
-        return -EAGAIN;
+        return -11;
       }
       else set_ss_pag(new_PT, PAG_LOG_INIT_DATA + i, i); //void set_ss_pag(page_table_entry *PT, unsigned page,unsigned frame);
 
-    }
-
+    }*/
+    
     //Create new address space
     page_table_entry *new__PT = get_PT(task_hijo); //Returns the Page Table address
     page_table_entry *parent_PT = get_PT(current());   //Returns the Page Table address
@@ -101,7 +114,7 @@ int sys_write(int fd, char *buffer, int size) {
   /*if (c_fd < 0) return c_fd;
 
   //Check buffer
-  if (buffer == NULL) //hace algo!!!
+  if (buffer == NULL) //hace algo!!!page_table_entry *new__PT = get_PT(task_hijo);
   else //hace otra cosa
 
   //check the size
@@ -129,21 +142,22 @@ int sys_write(int fd, char *buffer, int size) {
 
 }
 
-/*void sys_task_switch(struct task_union *new) { //no se si esto se tiene que hacer aqui!!!!
-
-    //cambio de tss
-    tss.esp0 = (int)&(new->stack[KERNEL_STACK_SIZE]); //1024
-
-    //cambio cr3
-    set_cr3(get_DIR(&new->task))//set_cr3(new->task->*dir_pages_baseAddr);+
-
-
-    // luego se vuelve al wrapper para cambiar el kernel ebp al del new proceso
-    inner_task_switch();
-
-}*/
 
 
 void sys_exit()
 {
+    
+  //Free  the  data  structures  and  resources  of  this  process  (physical  memory,  task_struct, and so). It uses the free_frame function to free physical pages
+     
+   page_table_entry *PT_actual = get_PT(current());
+   for (int i = 0; i < NUM_PAG_DATA; ++i) {
+      //void free_frame(unsigned int frame) --> unsigned int get_frame(PT,unsigned int page)
+       
+      free_frame(get_frame(PT_actual,PAGE_LOG_INIT_DATA+i)); 
+      del_ss_pag(PT_actual,PAGE_LOG_INIT_DATA+i);
+      
+   }
+   list_add_tail(&(current()->anchor),&free_queue) //enviarlo a la free_queue free!!!!
+   
+   update_sched_data_rr(); //Use the scheduler interface to select a new process to be executed and make a context switch
 }
