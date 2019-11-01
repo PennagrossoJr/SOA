@@ -29,7 +29,9 @@ int sys_ni_syscall()
 {
 	return -38; /*ENOSYS*/
 }
-
+int ret_from_fork () {
+    return 0;
+}
 int sys_getpid()
 {
 	return current()->PID;
@@ -106,9 +108,9 @@ int sys_fork()
     task_hijo->task.estado=ST_READY;
     //PREPARE CHILD STACK
     // oldss ... ebx 16 posiciones 17 -> @reth , 18 -> ret_from_fork, 19 -> 0 ebp task_switch
-    hijo_task_union->stack[KERNEL_STACK_SIZE-19] = 0;
+    hijo_task_union->stack[KERNEL_STACK_SIZE-19] =  0;
     hijo_task_union->stack[KERNEL_STACK_SIZE-18] = (unsigned int)ret_from_fork;
-    task_hijo->kernel_esp = (unsigned long *)&new_union->stack[KERNEL_STACK_SIZE-19];
+    task_hijo->kernel_esp = (unsigned long *)&hijo_task_union->stack[KERNEL_STACK_SIZE-19];
         
 
     
