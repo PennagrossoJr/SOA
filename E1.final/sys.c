@@ -37,7 +37,6 @@ int sys_getpid()
 
 int sys_fork()
 {
-  int PID=-1;
 
   
   if (list_empty(&free_queue)) return -11; //Get a free task_struct for the process. If there is no space for a new process, an  error will be returned. EAGAIN
@@ -97,24 +96,26 @@ int sys_fork()
     for (int i = 0 ; i < NUM_PAG_DATA; i++) {
         set_ss_pag(padre_pt, i + TEMP_DATA, framesData[i]);
         //conversion (int -> void *)
-        copy_data((void *)((Data_Start + i) * PAGE_SIZE), (void *)((TEMP_DATA + i) * PAGE_SIZE), PAGE_SIZE);
+        copy_data((void *)((Data_Start + i)<<12), (void *)((TEMP_DATA + i)<<12), PAGE_SIZE);
         del_ss_pag(padre_pt, i + TEMP_DATA);
     }
     //Writes on CR3 register producing a TLB flush 
     set_cr3(get_DIR(task_padre)); //disable the parent process to access the child pages.
     //PID
     task_hijo->PID = ++PIDGLOBAL;
-    PID = child_task->PID;
+    task_hijo->task.estado=ST_READY;
     //PREPARE CHILD STACK
-
-
-    
+    // oldss ... ebx 16 posiciones 17 -> @reth , 18 -> ret_from_fork, 19 -> 0 ebp task_switch
+    hijo_task_union->stack[KERNEL_STACK_SIZE-19] = 0;
+    hijo_task_union->stack[KERNEL_STACK_SIZE-18] = (unsigned int)ret_from_fork;
+    task_hijo->kernel_esp = (unsigned long *)&new_union->stack[KERNEL_STACK_SIZE-19];
+        
 
     
     // meter hijo en la cola de ready
    list_add_tail(&task_hijo->anchor, &readyqueue);	
 	
-    return PID;
+    return task_hijo->PID;
 }
 
 
