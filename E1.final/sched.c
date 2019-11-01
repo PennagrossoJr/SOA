@@ -62,11 +62,14 @@ void init_idle (void)
     union task_union *idle_task_union = (union task_union*)idle_task; //COMO CONSTRUYO EL TASK_UNION??
 
     idle_task->PID = 0;
+    idle_task->estado = ST_READY;
     idle_task->quantum = defaultQuantum;
 
     allocate_DIR(idle_task); //inicializo con nuevo directory
 
-    idle_task_union->stack[KERNEL_STACK_SIZE] = &cpu_idle; //stack vacia??
+    idle_task_union->stack[KERNEL_STACK_SIZE-1] = &cpu_idle; //stack vacia??
+    idle_task_union->stack[KERNEL_STACK_SIZE-2] = 0; //este es el ebp creo!!!!
+    idle_task->kernel_esp =(int)&(idle_task_union->stack[KERNEL_STACK_SIZE-2]);
 
     //Initialize the global variable idle_task, which will help to get easily the task_struct of the idle process.
 
@@ -85,8 +88,9 @@ void init_task1(void)
     set_user_pages(e1);
     e1->PT = get_PT(e1);
     e1->quantum = defaultQuantum;
+    e1->estado=ST_RUN;
 
-    tss.esp0 = union_task1 -> stack[KERNEL_STACK_SIZE];
+    tss.esp0 = (int)&(union_task1 -> stack[KERNEL_STACK_SIZE-2]);
 
     set_cr3(e1->dir_pages_baseAddr); // == get_DIR(&e1->task)
 
@@ -97,7 +101,7 @@ void init_task1(void)
 
 void inner_task_switch(union task_union*t) {
 
-    tss.esp0 = (int)&(new->stack[KERNEL_STACK_SIZE]); //1024
+    tss.esp0 = (int)&(new->stack[KERNEL_STACK_SIZE-2]); //1024
 
     //cambio cr3
     set_cr3(get_DIR(&new->task))//set_cr3(new->task->*dir_pages_baseAddr);
@@ -132,7 +136,7 @@ int needs_sched_rr () {
     current()->quantum = defaultQuantum;
     if (list_empty(&ready_queue)) return 1; //necessary Change:  A context switch is required when the quantum is over and there are some candidate process to use the CPU
   }
-  else  return 0
+  else  return 0;
 }
 
 void update_process_state_rr (struct task_struct *t, struct list_head *dst_queue) {
@@ -149,7 +153,7 @@ void update_process_state_rr (struct task_struct *t, struct list_head *dst_queue
       if (t->estado == ST_READY) ++((t->stadistical)->total_trans); //Total transitions ready --> run
       t->estado = ST_RUN;
   }
-  else t->estado = ST_BLOCKED; //we have not implemented any blocking system call 
+  else t->estado = ST_BLOCKED; //we have not implemented any blocking system call
   //else running!!! If the current state of the process is running, then there is no need to delete it from any queue.
 }
 
@@ -160,13 +164,13 @@ void init_queues()
       list_add_tail( &task[i].task.anchor, &free_queue)
   }
   INIT_LIST_HEAD(&ready_queue); //inicializar la struct!!!
-  
-  defaultQuantum = 50; //valor???
+
+  defaultQuantum = 100; //valor???
 }
 
 void sched_next_rr() {
-  
-   current()->quantum = defaultQuantum;//solamete para cuando hago el cambio en el process destruccion!!!!!
+
+  current()->quantum = defaultQuantum;//solamete para cuando hago el cambio en el process destruccion!!!!!
   if (!list_empty(&ready_queue)) { // to extract it from the ready queue
     struct list_head *next = list_first(&ready_queue); //primer elemento de la queue --> el sguiente!!!
     list_del(list_first(&ready_queue));
@@ -175,6 +179,19 @@ void sched_next_rr() {
     task_switch(next_task_union); //invoke the context switch process.
   }
   else task_switch((union task_union*)idle_task); //sino no hay mas en la ready_queue, psasr al idle or free_queue??
+
+}
+
+
+void set_quantum (struct task_struct *t, int new_quantum){
+
+    t->quantum = new_quantum;
+}
+
+
+int get_quantum (struct task_struct *t) {
+
+    return t->quantum;
 
 }
 
