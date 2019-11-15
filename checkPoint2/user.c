@@ -12,6 +12,7 @@ void workCPU() {
     for(i=0 ; i<1000; i++) {
         aux = aux*aux*aux + 1; //work for CPU
     }
+    writeSta(getpid(), 0);
 }
 
 void workIO() {
@@ -20,6 +21,7 @@ void workIO() {
     for(i = 0; i < 200 ; i++ ) {
         read(0, buff, 3); //emulates console reading, blocking 
     }
+    writeSta(getpid(), 1);
 }
 
 void writeSta(int pid, int type) {
