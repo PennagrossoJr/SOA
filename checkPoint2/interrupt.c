@@ -35,10 +35,10 @@ int zeos_ticks = 0;
 
 void clock_routine()
 {
+  zeos_update_read_console_emul();  
   zeos_show_clock();
   zeos_ticks ++;
   schedule();
-  zeos_update_read_console_emul();
 
 }
 
@@ -117,6 +117,8 @@ void setIdt()
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
   setInterruptHandler(32, clock_handler, 0);
   setInterruptHandler(33, keyboard_handler, 0);
+  setInterruptHandler(0x80, system_call_handler, 3);
+
 
   setSysenter();
 

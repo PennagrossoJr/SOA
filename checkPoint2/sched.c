@@ -150,11 +150,11 @@ void sched_next_rr(void)
 
 void schedule()
 {
-  update_sched_data_rr();
-  if (needs_sched_rr())
+  update_sched_data();
+  if (needs_sched())
   {
-    update_process_state_rr(current(), &readyqueue);
-    sched_next_rr();
+    update_process_state(current(), &readyqueue);
+    sched_next();
   }
 }
 
@@ -233,7 +233,7 @@ void init_sched()
 struct stats * get_task_stats(struct task_struct *t){
 	return &(t->p_stats);
 }
-struct list_head* get_task_list(struct task_struct *t){
+struct list_head * get_task_list(struct task_struct *t){
 	return &(t->list);
 }
 void block_process(struct list_head* block_queue) {

@@ -100,6 +100,7 @@ int __attribute__((__section__(".text.main")))
 
   //set_sched_policy(0);
   zeos_console_init();
+  
   printk("Entering user mode...");
 
   enable_int();
