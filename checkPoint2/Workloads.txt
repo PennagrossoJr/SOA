@@ -1,0 +1,46 @@
+﻿Workloads:
+
+
+1. El primero se centra en la CPU. En este caso lo que solamente hacemos es un bucle de for de 1000 iteraciones en el cual hace un cálculo “tonto”, se podría “complicarlo” más.
+
+
+2. El segundo se centra en el estado de Ready-Blocked (I/O burst). En este caso usamos la llamada al sistema que provoca un estado blocked de los procesos. 
+
+
+3. El tercero es una mezcla de los dos anteriores pero en el cual se centra en la CPU (large CPU bursts) y tiene menos rafagas de I/O.
+
+
+
+
+Discussion: 
+
+
+1. CPU burst:
+        
+* RR →  Por lo que podemos ver es que nadie pasa por el estado Blocked. El tiempo (ticks) en el que tardan en hacer los cálculos, ya que es un cálculo como hemos mencionado antes es relativamente rápido.  
+
+
+* FCFS → 
+        
+
+
+
+
+2. I/O burst:
+
+
+* RR → En este vemos claramente cómo los procesos pasan por los estados de Blocked a Ready como consecuencia del uso de la llamada read del sistema. Podemos ver que los ticks de los procesos son muy grandes.
+
+
+* FCFS → 
+
+
+
+
+3.  Large I/O CPU and short I/0 bursts:
+
+
+* RR → En nos centramos más en la CPU, por eso los tiempos que están en el estado de Blocked es muy menor, y como las ráfagas de CPU los hace super rápidos, entonces los ticks son menores que los de Workload 2.
+
+
+* FCFS →
