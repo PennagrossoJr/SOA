@@ -199,7 +199,7 @@ int __attribute__ ((__section__(".text.main")))
     writeSta(getpid(), 1*/
         
     }
-
-	//return 0;
+    exit();
+	return 0;
 	while (1) {}
 }

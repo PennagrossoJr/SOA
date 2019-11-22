@@ -20,7 +20,7 @@ Discussion:
 * RR →  Por lo que podemos ver es que nadie pasa por el estado Blocked. El tiempo (ticks) en el que tardan en hacer los cálculos, ya que es un cálculo como hemos mencionado antes es relativamente rápido.  
 
 
-* FCFS → 
+* FCFS → Podemos observar que como con RR, FCFS no deja executar el proceso IDLE, y los tiempos totales vienen a ser parecidos en los dos casos. 
         
 
 
@@ -32,7 +32,7 @@ Discussion:
 * RR → En este vemos claramente cómo los procesos pasan por los estados de Blocked a Ready como consecuencia del uso de la llamada read del sistema. Podemos ver que los ticks de los procesos son muy grandes.
 
 
-* FCFS → 
+* FCFS → No hay mucha diferencia con RR, aunque tuvimos un problema y nos salia page fault antes de que el último proceso pudiese imprimir sus tiempos.
 
 
 
@@ -43,4 +43,4 @@ Discussion:
 * RR → En nos centramos más en la CPU, por eso los tiempos que están en el estado de Blocked es muy menor, y como las ráfagas de CPU los hace super rápidos, entonces los ticks son menores que los de Workload 2.
 
 
-* FCFS →
+* FCFS → En este caso tuvimos un problema con los 2 últimos procesos hijos, con un page fault. Y el proceso idle era bastante alto.
