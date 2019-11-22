@@ -1,7 +1,7 @@
 #include <libc.h>
 #include <stats.h>
 
-#define POLITICA 1
+#define POLITICA 0
 #define TYPE 0
 char buff[24];
 
@@ -51,7 +51,7 @@ void writeSta(int pid, int type) {
         buff[p] = '\n';
         write(1, buff, p+1);
         
-        char buffer4[64] = "Acabanado de printear los valores del stat!!!";
+        char buffer4[64] = "Acabando de printear los valores del stat!!!";
         write(1,buffer4,64);
       }
 }
@@ -83,17 +83,18 @@ int __attribute__ ((__section__(".text.main")))
     if(pid) { //padre
         pid = fork();
         if(pid) {
+			void(* accio)(void);
             //select(TYPE);
             
-            /* Workload 1
+            // Workload 1
             int aux = 1;
             int i;
             for(i=0 ; i<1000; i++) {
                 aux = aux*aux*aux + 1; //work for CPU
             }
-            writeSta(getpid(), 0);*/
+            writeSta(getpid(), 0);
             
-            /* Workload 2
+            /*// Workload 2
             int i;
             int buff[2];
             for(i = 0; i < 200 ; i++ ) {
@@ -103,7 +104,7 @@ int __attribute__ ((__section__(".text.main")))
             
             
             //Workload 3
-            int aux = 1;
+            /*int aux = 1;
             int ix;
             for(ix=0 ; ix<10000; ix++) {
                 aux = aux*aux*aux + 1; //work for CPU
@@ -114,7 +115,7 @@ int __attribute__ ((__section__(".text.main")))
             for(i = 0; i < 2 ; i++ ) {
                 read(0, buff, 3); //emulates console reading, blocking 
             }
-            writeSta(getpid(), 0);
+            writeSta(getpid(), 0);*/
             
             
             
@@ -127,16 +128,16 @@ int __attribute__ ((__section__(".text.main")))
         }   
         else{  //hijo2
             
-             /* Workload 1
+            // Workload 1
             int aux = 1;
             int i;
             for(i=0 ; i<1000; i++) {
                 aux = aux*aux*aux + 1; //work for CPU
             }
-            writeSta(getpid(), 0);*/
+            writeSta(getpid(), 0);
             
-            /* Workload 2
-            int i;
+           //  Workload 2
+           /* int i;
             int buff[2];
             for(i = 0; i < 200 ; i++ ) {
                 read(0, buff, 3); //emulates console reading, blocking 
@@ -144,7 +145,7 @@ int __attribute__ ((__section__(".text.main")))
             writeSta(getpid(), 1);*/
 
             //Workload 3
-            int aux = 1;
+           /* int aux = 1;
             int ix;
             for(ix=0 ; ix<10000; ix++) {
                 aux = aux*aux*aux + 1; //work for CPU
@@ -158,7 +159,7 @@ int __attribute__ ((__section__(".text.main")))
             }
             
             
-            writeSta(getpid(), 0);
+            writeSta(getpid(), 0);*/
        
         }
     }
@@ -167,16 +168,16 @@ int __attribute__ ((__section__(".text.main")))
     else { //hijo
         //select(TYPE);
         
-         /* Workload 1
+         // Workload 1
             int aux = 1;
             int i;
             for(i=0 ; i<1000; i++) {
                 aux = aux*aux*aux + 1; //work for CPU
             }
-            writeSta(getpid(), 0);*/
+            writeSta(getpid(), 0);
             
-            /* Workload 2
-            int i;
+            // Workload 2
+            /*int i;
             int buff[2];
             for(i = 0; i < 200 ; i++ ) {
                 read(0, buff, 3); //emulates console reading, blocking 
@@ -184,7 +185,7 @@ int __attribute__ ((__section__(".text.main")))
             writeSta(getpid(), 1);*/
         
         //Workload 3
-        int i;
+       /* int i;
         int buff[2];
         for(i = 0; i < 2 ; i++ ) {
             read(0, buff, 3); //emulates console reading, blocking 
@@ -195,10 +196,10 @@ int __attribute__ ((__section__(".text.main")))
             aux = aux*aux*aux + 1; //work for CPU
         }   
         
-    writeSta(getpid(), 1);
+    writeSta(getpid(), 1*/
         
     }
-    
+
+	//return 0;
 	while (1) {}
-	
 }
