@@ -22,8 +22,8 @@ createServerSocket (int port)
 	//int fd = clientConnection("0.0.0.0",port);
     
     // SocketCreate
-    int fd = socket_fd = socket (AF_INET, SOCK_STREAM, 0);
-    if (socket_fd < 0) {
+    int fd = socket (AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) {
         write(1,"Error al crear el socket!!!",50);
         return fd;
     }
@@ -48,8 +48,9 @@ createServerSocket (int port)
     
     //Listen
     listen(fd, 5); //numero de conexiones que se permite
-    write(1,"Escuchando...",50);
-	return fd;
+    //write(1,"Escuchando...",10);
+    printf("Escuchando...\n");
+    return fd;
 }
 
 
@@ -68,11 +69,13 @@ acceptNewConnections (int socket_fd)
      struct sockaddr_in client;
      int sock = accept(socket_fd,&client,&clientLen);
      if (sock < 0) {
-        write(1,"no se acepta conexiones",50);
+        //write(1,"no se acepta conexiones",50);
+        printf("no se acepta conexiones\n");
         return 1;
     }
     else {
-       write(1,"se ha aceptado la conexion!!!!",50);
+       //write(1,"se acepta conexiones",50);
+       printf("se acepta conexiones\n");
        return sock; 
     }
 }
