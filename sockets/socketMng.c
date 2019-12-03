@@ -18,9 +18,37 @@
 int
 createServerSocket (int port)
 {
-	write(1,"dd",2);
-	int fd = clientConnection("0.0.0.0",port);
-	printf("value of c : %d \n", fd);
+	//write(1,"dd",2);
+	//int fd = clientConnection("0.0.0.0",port);
+    
+    // SocketCreate
+    int fd = socket_fd = socket (AF_INET, SOCK_STREAM, 0);
+    if (socket_fd < 0) {
+        write(1,"Error al crear el socket!!!",50);
+        return fd;
+    }
+    
+    // BindCreatedSocket
+    struct sockaddr_in serv_addr;
+    memset((char *) &serv_addr, 0, sizeof(serv_addr));
+    
+    /* Internet address family */
+    serv_addr.sin_family = AF_INET;
+    
+    /* Any incoming interface */
+    serv_addr.sin_port = htons(port);
+    serv_addr.sin_addr.s_addr = INADDR_ANY; 
+    
+    int iRetval = bind(fd,(struct sockaddr *)&serv_addr,sizeof(serv_addr));
+    
+    if (iRetval < 0) {
+        write(1,"Error al crear el bind!!!",50);
+        return fd;
+    }
+    
+    //Listen
+    listen(fd, 5); //numero de conexiones que se permite
+    write(1,"Escuchando...",50);
 	return fd;
 }
 
@@ -33,7 +61,20 @@ createServerSocket (int port)
 int
 acceptNewConnections (int socket_fd)
 {
-	return accept( socket_fd, (struct sockaddr *) AF_INET, sizeof(AF_INET));
+	//return accept( socket_fd, (struct sockaddr *) AF_INET, sizeof(AF_INET));
+    
+     //accept connection from an incoming client
+     int clientLen = sizeof(struct sockaddr_in);
+     struct sockaddr_in client;
+     int sock = accept(socket_fd,&client,&clientLen);
+     if (sock < 0) {
+        write(1,"no se acepta conexiones",50);
+        return 1;
+    }
+    else {
+       write(1,"se ha aceptado la conexion!!!!",50);
+       return sock; 
+    }
 }
 
 // Returns the socket virtual device that the client should use to access 
