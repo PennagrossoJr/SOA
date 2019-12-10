@@ -1,8 +1,7 @@
  #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
-#define MAXB 2
+#define MAXB 10
 int hijos = 0;
 
 doServiceFork(int fd) {
@@ -21,6 +20,7 @@ doServiceFork(int fd) {
 }
 
 doService(int fd) {
+
 int i = 0;
 char buff[80];
 char buff2[80];
@@ -67,6 +67,7 @@ main (int argc, char *argv[])
 
   port = atoi(argv[1]);
   socketFD = createServerSocket (port);
+  
   if (socketFD < 0)
     {
       perror ("Error creating socket\n");

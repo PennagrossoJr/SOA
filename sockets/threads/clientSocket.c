@@ -67,6 +67,7 @@ main (int argc, char *argv[])
   msec_elapsed = (res_t.tv_sec*1000)+(res_t.tv_usec/1000);
   sprintf(buff2, "Time %d msec\n",msec_elapsed);
   write(2,buff2,strlen(buff2));
+  write(2,buff2,strlen(buff2));
   deleteSocket (connectionFD);
 
 }

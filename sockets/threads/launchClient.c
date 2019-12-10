@@ -8,7 +8,7 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 
-
+int tiempos[];
 
 int max_concurrent = 0;
 int current_concurrent = 0;
