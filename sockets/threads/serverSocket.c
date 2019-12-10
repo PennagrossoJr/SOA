@@ -4,25 +4,6 @@
 #include <pthread.h>
 
 
-doServiceThread(int fd) {
-	
-	pthread_t tid;	
-	
-	if(pthread_create(&tid, NULL, doService(fd),NULL) != 0 )
-			printf("Error al crear el thread \n");
-	
-	
-	
-	
-	int i = fork();
-	if(i == 0) {
-		doService(fd);
-		return 0;
-	}
-	//printf("pid %d\n" , i);
-	return 0;
-}
-
 doService(int fd) {
 int i = 0;
 char buff[80];
@@ -35,12 +16,16 @@ int socket_fd = (int) fd;
 		buff[ret]='\0';
 		sprintf(buff2, "Server [%d] received: %s\n", getpid(), buff);
 		write(1, buff2, strlen(buff2));
-		ret = write(fd, "caracola ", 8);
+		ret = write(fd, "caracola", 8);
+
 		if (ret < 0) {
+
 			perror ("Error writing to socket");
+                    printf("chivato 2 \n");
 			exit(1);
 		}
 		ret = read(socket_fd, buff, sizeof(buff));
+
 	}
 	if (ret < 0) {
 			perror ("Error reading from socket");
@@ -48,7 +33,18 @@ int socket_fd = (int) fd;
 	}
 	sprintf(buff2, "Server [%d] ends service\n", getpid());
 	write(1, buff2, strlen(buff2));
+    //pthread_exit(NULL);
 
+}
+
+doServiceThread(int fd) {
+	pthread_t tid;	
+	if(pthread_create(&tid, NULL, doService,fd) != 0 ) { 
+         /*The new thread starts execution by invoking
+           start_routine(); arg is passed as the sole argument of
+           start_routine()*/
+         printf("Error al crear el thread \n");
+    }
 }
 
 

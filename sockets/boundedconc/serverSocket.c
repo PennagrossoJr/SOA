@@ -6,17 +6,17 @@
 int hijos = 0;
 
 doServiceFork(int fd) {
-	
+    
 	int i = fork();
 	hijos = hijos + 1;
 	if(i == 0) {
-	    printf("el hijo cominza  %d\n" , i);
+	    //printf("el hijo cominza  %d\n" , i);
 		doService(fd);
-		hijos = hijos - 1;
-		printf("el hijo termina  %d\n" , i);
-		return 0;
+		//printf("el hijo termina  %d\n" , i);
+		//return 0;
+        exit(0);
 	}
-	printf("pid %d\n" , i);
+	//printf("pid %d\n" , i);
 
 }
 
@@ -74,7 +74,14 @@ main (int argc, char *argv[])
     }
 
   while (1) {
-	  while(hijos >= MAXB){}
+      //printf ("Recibo conexion \n");
+	  if (hijos >= MAXB){
+        //printf ("Hijos ejecutandose: %d \n", hijos);
+        wait(NULL);
+        hijos = hijos - 1;
+        //printf ("Hijos ejecutandose despues del wait: %d \n", hijos);
+      }
+	
 	  connectionFD = acceptNewConnections (socketFD);
 	  if (connectionFD < 0)
 	  {
@@ -82,10 +89,9 @@ main (int argc, char *argv[])
 		  deleteSocket(socketFD);
 		  exit (1);
 	  }
-	  printf ("Esta disponible \n");
+	  //printf ("Esta disponible \n");
 	  doServiceFork(connectionFD);
-	  printf ("Ocupados: %d\n", hijos);
-
+	  //printf ("Ocupados: %d\n", hijos);
   }
 
 }
